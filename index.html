@@ -777,5 +777,35 @@ a:focus-visible,summary:focus-visible{outline:3px solid #FFD23F;outline-offset:3
 </footer>
 
 </div>
+<style>
+.rv{opacity:0;transform:translateY(32px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1);will-change:opacity,transform}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1!important;transform:none!important;transition:none!important}}
+</style>
+<script>
+(function(){
+  if(!('IntersectionObserver' in window)) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var picked=[];
+  function add(el,i){ if(!el||el.closest('header')) return; for(var k=0;k<picked.length;k++){ if(picked[k][0]===el||picked[k][0].contains(el)) return; } picked.push([el,i||0]); }
+  // first view: heading block, then cards one by one
+  var fv=document.querySelector('#top .fvb-in');
+  if(fv){ add(fv.children[0],0); var row=fv.children[1]; if(row){ Array.prototype.forEach.call(row.children,function(c,i){add(c,i+2);}); } }
+  document.querySelectorAll('section:not(#top)').forEach(function(sec){
+    sec.querySelectorAll('h2').forEach(function(h){ var p=h.parentElement; add(p && p.children.length<=5 && p.tagName==='DIV' ? p : h,0); });
+    sec.querySelectorAll('div').forEach(function(d){
+      var st=d.getAttribute('style')||'';
+      var isGrid=/display:\s*grid/.test(st);
+      var isRow=/display:\s*flex/.test(st) && /flex-wrap:\s*wrap/.test(st) && d.children.length>=3 && !/flex-direction:\s*column/.test(st);
+      if(isGrid||isRow){ Array.prototype.forEach.call(d.children,function(c,i){ add(c,i); }); }
+    });
+    sec.querySelectorAll('figure, video, details').forEach(function(e,i){ add(e.tagName==='VIDEO'?e.parentElement:e, e.tagName==='DETAILS'?i:0); });
+    sec.querySelectorAll('a[href*="aman-style.jp/contact"]').forEach(function(a){ add(a,1); });
+  });
+  var io=new IntersectionObserver(function(ents){ ents.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }); },{threshold:0.12,rootMargin:'0px 0px -6% 0px'});
+  picked.forEach(function(p){ var el=p[0]; el.classList.add('rv'); el.style.transitionDelay=(Math.min(p[1],6)*0.09)+'s'; io.observe(el); });
+})();
+</script>
+
 </body>
 </html>
